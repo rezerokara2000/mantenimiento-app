@@ -1,0 +1,20 @@
+---
+/** Insignia de afiliación. `value` es una expresión Alpine (p. ej. "s.affiliation"). */
+export interface Props {
+  value: string;
+}
+const { value } = Astro.props;
+---
+
+<span
+  x-show={`!!(${value})`}
+  x-text={value}
+  x-bind:class={`{
+    'bg-blue-100 text-blue-900 ring-blue-300': (${value} || '').toLowerCase() === 'planilla',
+    'bg-violet-100 text-violet-900 ring-violet-300': (${value} || '').toLowerCase().includes('honorarios'),
+    'bg-orange-100 text-orange-900 ring-orange-300': (${value} || '').toLowerCase() === 'externo',
+    'bg-slate-100 text-slate-800 ring-slate-300': !['planilla','externo'].includes((${value} || '').toLowerCase()) && !(${value} || '').toLowerCase().includes('honorarios'),
+  }`}
+  class="inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ring-1"
+>
+</span>

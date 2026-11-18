@@ -1,0 +1,39 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import EventFilters from '../components/events/EventFilters.astro';
+import EventCard from '../components/events/EventCard.astro';
+import EventDetail from '../components/events/EventDetail.astro';
+import EventForm from '../components/events/EventForm.astro';
+import WhatsAppShareModal from '../components/ui/WhatsAppShareModal.astro';
+---
+
+<MainLayout title="Eventos">
+  <div x-data="eventsBoard({ mode: 'upcoming' })" class="space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-900">Eventos</h1>
+        <p class="text-sm text-slate-700">Vigentes y próximos. Los eventos finalizados pasan a Registro / Auditoría.</p>
+      </div>
+      <a href="/crear-lista" class="inline-flex min-h-12 items-center rounded-lg bg-amber-400 px-5 font-extrabold text-slate-900 shadow hover:bg-amber-300">
+        + Nueva lista
+      </a>
+    </div>
+
+    <EventFilters exportAll />
+
+    <p x-show="loading" class="rounded-xl bg-white p-6 text-center font-semibold text-slate-700 ring-1 ring-slate-300">Cargando eventos…</p>
+    <p x-show="!loading && filtered.length === 0" x-cloak class="rounded-xl bg-white p-6 text-center font-semibold text-slate-700 ring-1 ring-slate-300">
+      No hay eventos próximos que coincidan.
+    </p>
+
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <template x-for="ev in filtered" x-bind:key="ev.id">
+        <EventCard />
+      </template>
+    </div>
+
+    <EventDetail />
+    <EventForm />
+    <WhatsAppShareModal />
+  </div>
+</MainLayout>

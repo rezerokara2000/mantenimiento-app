@@ -1,0 +1,98 @@
+---
+import Modal from '../ui/Modal.astro';
+import ExportToolbar from '../lists/ExportToolbar.astro';
+import StaffBadge from '../staff/StaffBadge.astro';
+---
+
+<Modal show="detail" onClose="detail = null" titleExpr="detail ? detail.title : ''" size="md">
+  <template x-if="detail">
+    <div class="space-y-4">
+      <dl class="grid grid-cols-1 gap-2 rounded-lg bg-slate-100 p-3 text-base sm:grid-cols-3">
+        <div>
+          <dt class="text-xs font-bold uppercase tracking-wide text-slate-600">Fecha</dt>
+          <dd class="font-bold text-slate-900" x-text="fmtRange(detail)"></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-bold uppercase tracking-wide text-slate-600">Lugar</dt>
+          <dd class="font-bold text-slate-900" x-text="detail.location"></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-bold uppercase tracking-wide text-slate-600">Tipo</dt>
+          <dd class="font-bold text-slate-900" x-text="detail.event_types?.name ?? 'Sin tipo'"></dd>
+        </div>
+      </dl>
+
+      <!-- Pestañas de día si el evento dura varios días -->
+      <div x-show="eventDays(detail).length > 1" x-cloak class="flex gap-2 overflow-x-auto pb-1">
+        <template x-for="d in eventDays(detail)" x-bind:key="d">
+          <button
+            type="button"
+            x-on:click="detailDay = d"
+            x-bind:class="detailDay === d ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'"
+            class="min-h-10 shrink-0 rounded-lg px-3 text-sm font-bold capitalize"
+            x-text="fmtLong(d)"
+          ></button>
+        </template>
+      </div>
+
+      <template x-for="turno in [{ key: 'DIA', label: '☀️ Turno Día', head: 'bg-amber-400 text-slate-900' }, { key: 'NOCHE', label: '🌙 Turno Noche', head: 'bg-slate-900 text-white' }]" x-bind:key="turno.key">
+        <section class="overflow-hidden rounded-lg ring-1 ring-slate-300">
+          <h3
+            class="flex items-center justify-between px-3 py-2 font-extrabold"
+            x-bind:class="turno.head"
+          >
+            <span x-text="turno.label"></span>
+            <span class="text-sm" x-text="shiftRows(detail, turno.key, detailDay).length + ' persona(s)'"></span>
+          </h3>
+          <p x-show="shiftRows(detail, turno.key, detailDay).length === 0" class="p-3 text-sm italic text-slate-600">
+            Sin personal asignado.
+          </p>
+          <ul class="divide-y divide-slate-200">
+            <template x-for="a in shiftRows(detail, turno.key, detailDay)" x-bind:key="a.id">
+              <li class="flex items-center justify-between gap-2 px-3 py-2.5">
+                <div class="min-w-0">
+                  <p class="truncate font-bold text-slate-900" x-text="[a.staff?.first_name, a.staff?.last_name].filter(Boolean).join(' ')"></p>
+                  <p class="flex flex-wrap items-center gap-1.5 text-sm text-slate-600">
+                    <span x-show="a.staff?.dni" x-text="'DNI ' + a.staff?.dni"></span>
+                    <StaffBadge value="a.staff?.affiliation" />
+                  </p>
+                </div>
+                <span
+                  class="shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold ring-1"
+                  x-bind:class="{
+                    'bg-emerald-100 text-emerald-900 ring-emerald-400': a.status === 'ASISTIO',
+                    'bg-red-100 text-red-900 ring-red-400': a.status === 'FALTA',
+                    'bg-blue-100 text-blue-900 ring-blue-400': a.status === 'VACACIONES'
+                  }"
+                  x-text="statusText(a.status)"
+                ></span>
+              </li>
+            </template>
+          </ul>
+        </section>
+      </template>
+    </div>
+  </template>
+
+  <Fragment slot="footer">
+    <template x-if="detail">
+      <div class="flex w-full flex-wrap items-center justify-between gap-2">
+        <ExportToolbar compact pdf="exportPdf(detail)" excel="exportExcel(detail)" whatsapp="shareWhatsApp(detail)" copy="copyList(detail)" />
+        <div class="flex flex-wrap gap-2">
+          <a
+            x-bind:href="`/crear-lista?evento=${detail.id}`"
+            class="inline-flex min-h-10 items-center rounded-lg border-2 border-amber-500 bg-amber-400 px-3 text-sm font-bold text-slate-900 hover:bg-amber-300"
+          >
+            📝 Editar lista
+          </a>
+          <button type="button" x-on:click="startEdit(detail)" class="min-h-10 rounded-lg border-2 border-slate-400 bg-white px-3 text-sm font-bold text-slate-900 hover:bg-slate-100">
+            ✏️ Editar evento
+          </button>
+          <button type="button" x-on:click="remove(detail)" class="min-h-10 rounded-lg border-2 border-red-700 bg-white px-3 text-sm font-bold text-red-800 hover:bg-red-50">
+            🗑 Eliminar
+          </button>
+        </div>
+      </div>
+    </template>
+  </Fragment>
+</Modal>

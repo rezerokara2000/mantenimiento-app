@@ -1,0 +1,28 @@
+---
+/** Pestañas Día / Noche. Requiere en el scope Alpine: `shift`, `count(shift)` y `presentCount(shift)`. */
+---
+
+<div class="grid grid-cols-2 gap-2 rounded-xl bg-slate-200 p-1.5" role="tablist" aria-label="Turno">
+  <button
+    type="button"
+    role="tab"
+    x-on:click="shift = 'DIA'"
+    x-bind:aria-selected="(shift === 'DIA').toString()"
+    x-bind:class="shift === 'DIA' ? 'bg-amber-400 text-slate-900 shadow' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
+    class="flex min-h-14 flex-col items-center justify-center rounded-lg px-2 font-extrabold focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
+  >
+    <span>☀️ Turno Día</span>
+    <span class="text-xs font-semibold" x-text="`${count('DIA')} asignados · ${presentCount('DIA')} presentes`"></span>
+  </button>
+  <button
+    type="button"
+    role="tab"
+    x-on:click="shift = 'NOCHE'"
+    x-bind:aria-selected="(shift === 'NOCHE').toString()"
+    x-bind:class="shift === 'NOCHE' ? 'bg-slate-900 text-white shadow' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
+    class="flex min-h-14 flex-col items-center justify-center rounded-lg px-2 font-extrabold focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+  >
+    <span>🌙 Turno Noche</span>
+    <span class="text-xs font-semibold" x-text="`${count('NOCHE')} asignados · ${presentCount('NOCHE')} presentes`"></span>
+  </button>
+</div>

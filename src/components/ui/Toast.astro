@@ -1,0 +1,22 @@
+<div
+  x-data
+  class="pointer-events-none fixed inset-x-0 bottom-4 z-[70] flex flex-col items-center gap-2 px-4"
+  aria-live="polite"
+  role="status"
+>
+  <template x-for="t in $store.toast.items" x-bind:key="t.id">
+    <div
+      x-transition
+      x-on:click="$store.toast.dismiss(t.id)"
+      class="pointer-events-auto flex w-full max-w-md items-start gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow-xl"
+      x-bind:class="{
+        'bg-slate-900 text-white': t.type === 'ok',
+        'bg-red-700 text-white': t.type === 'error',
+        'bg-blue-800 text-white': t.type === 'info',
+      }"
+    >
+      <span aria-hidden="true" x-text="t.type === 'error' ? '⚠️' : '✅'"></span>
+      <span x-text="t.msg"></span>
+    </div>
+  </template>
+</div>

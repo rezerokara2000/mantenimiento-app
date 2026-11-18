@@ -1,0 +1,195 @@
+---
+import ShiftSelector from './ShiftSelector.astro';
+import ExportToolbar from './ExportToolbar.astro';
+import SearchInput from '../ui/SearchInput.astro';
+import StaffBadge from '../staff/StaffBadge.astro';
+import WhatsAppShareModal from '../ui/WhatsAppShareModal.astro';
+
+/**
+ * Paso 3 del constructor: selección de día, turnos y estados (Asistió / Falta / Vacaciones).
+ */
+---
+
+<section class="space-y-4" aria-label="Asignación por días y turnos">
+  <!-- Selector de días para eventos de varios días -->
+  <div x-show="eventDays.length > 1" x-cloak class="rounded-xl bg-white p-3 shadow ring-1 ring-slate-300">
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+      <span class="text-sm font-extrabold text-slate-800">📅 Día del evento:</span>
+      <button
+        type="button"
+        x-show="eventDays.indexOf(activeDay) > 0"
+        x-on:click="copyPreviousDay()"
+        class="min-h-9 rounded-lg border-2 border-amber-500 bg-amber-50 px-3 text-xs font-extrabold text-slate-900 hover:bg-amber-100"
+      >
+        Copiar personal del día anterior
+      </button>
+    </div>
+    <div class="flex gap-2 overflow-x-auto pb-1">
+      <template x-for="day in eventDays" x-bind:key="day">
+        <button
+          type="button"
+          x-on:click="activeDay = day"
+          x-bind:class="activeDay === day ? 'bg-slate-900 text-white ring-2 ring-amber-400' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'"
+          class="min-h-11 shrink-0 rounded-lg px-3 py-1.5 text-left text-sm font-bold"
+        >
+          <span class="block capitalize" x-text="dayLabel(day)"></span>
+          <span class="text-xs opacity-80" x-text="dayTotalCount(day) + ' asignados'"></span>
+        </button>
+      </template>
+    </div>
+  </div>
+
+  <ShiftSelector />
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    <!-- Buscar y seleccionar trabajadores -->
+    <div class="rounded-xl bg-white p-3 shadow ring-1 ring-slate-300">
+      <h3 class="mb-2 text-base font-extrabold text-slate-900">
+        Agregar al turno <span x-text="shift === 'DIA' ? 'Día ☀️' : 'Noche 🌙'"></span>
+      </h3>
+      <SearchInput model="staffQ" placeholder="Buscar por nombre, DNI o afiliación" label="Buscar trabajador" />
+
+      <ul class="mt-3 max-h-80 divide-y divide-slate-200 overflow-y-auto rounded-lg ring-1 ring-slate-300">
+        <template x-for="s in staffOptions" x-bind:key="s.id">
+          <li>
+            <label
+              class="flex min-h-14 cursor-pointer items-center gap-3 px-3 py-2 hover:bg-amber-50"
+              x-bind:class="{ 'bg-amber-100': isSel(s.id) }"
+            >
+              <input
+                type="checkbox"
+                class="h-6 w-6 shrink-0 accent-amber-500"
+                x-bind:checked="isSel(s.id)"
+                x-on:change="toggle(s.id)"
+              />
+              <span class="min-w-0 flex-1">
+                <span class="block truncate font-bold text-slate-900" x-text="fullName(s)"></span>
+                <span class="flex flex-wrap items-center gap-1.5 text-sm text-slate-700">
+                  <span x-show="s.dni" x-text="'DNI ' + s.dni"></span>
+                  <StaffBadge value="s.affiliation" />
+                  <span x-show="!s.is_active" x-cloak class="font-bold text-red-700">Inactivo</span>
+                </span>
+              </span>
+              <span
+                x-show="isSel(s.id, shift === 'DIA' ? 'NOCHE' : 'DIA')"
+                x-cloak
+                class="shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-800"
+                x-text="shift === 'DIA' ? 'también Noche' : 'también Día'"
+              ></span>
+            </label>
+          </li>
+        </template>
+        <li x-show="staffOptions.length === 0" x-cloak class="p-4 text-center text-sm italic text-slate-600">
+          Nadie coincide con la búsqueda.
+        </li>
+      </ul>
+
+      <!-- Crear trabajador al vuelo: solo el nombre -->
+      <form x-on:submit.prevent="quickCreate()" class="mt-3 rounded-lg border-2 border-dashed border-slate-400 p-3">
+        <label for="quick-name" class="mb-1 block text-sm font-bold text-slate-800">
+          ¿Falta alguien? Agrégalo solo con el nombre
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="quick-name"
+            x-model="quickName"
+            placeholder="Nombre del trabajador"
+            autocomplete="off"
+            class="h-12 min-w-0 flex-1 rounded-lg border-2 border-slate-300 bg-white px-3 text-base focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300"
+          />
+          <button
+            type="submit"
+            x-bind:disabled="quickCreating || !quickName.trim()"
+            class="h-12 shrink-0 rounded-lg bg-slate-900 px-4 font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+          >
+            + Crear
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Asignados y asistencia -->
+    <div class="rounded-xl bg-white p-3 shadow ring-1 ring-slate-300">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h3 class="text-base font-extrabold text-slate-900">
+          Asistencia · <span x-text="shift === 'DIA' ? 'Día' : 'Noche'"></span>
+          (<span x-text="count(shift)"></span>)
+        </h3>
+        <div class="flex gap-1.5" x-show="count(shift) > 0" x-cloak>
+          <button type="button" x-on:click="markAllStatus('ASISTIO')" class="min-h-9 rounded-lg border-2 border-emerald-700 px-2.5 text-xs font-bold text-emerald-900 hover:bg-emerald-50">
+            Todos asistieron
+          </button>
+          <button type="button" x-on:click="markAllStatus('FALTA')" class="min-h-9 rounded-lg border-2 border-red-700 px-2.5 text-xs font-bold text-red-800 hover:bg-red-50">
+            Todos falta
+          </button>
+        </div>
+      </div>
+
+      <p x-show="count(shift) === 0" class="rounded-lg bg-slate-100 p-4 text-center text-sm italic text-slate-700">
+        Aún no hay nadie en este turno. Marca trabajadores en la lista.
+      </p>
+
+      <ul class="divide-y divide-slate-200 overflow-hidden rounded-lg ring-1 ring-slate-300" x-show="count(shift) > 0">
+        <template x-for="row in selected(shift)" x-bind:key="row.staff.id">
+          <li class="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-bold text-slate-900" x-text="fullName(row.staff)"></p>
+              <button type="button" x-on:click="toggle(row.staff.id)" class="text-xs font-bold text-red-700 underline underline-offset-2">
+                Quitar del turno
+              </button>
+            </div>
+            <div class="flex shrink-0 overflow-hidden rounded-lg ring-2 ring-slate-900" role="group" aria-label="Estado de asistencia">
+              <button
+                type="button"
+                x-on:click="setStatus(row.staff.id, 'ASISTIO')"
+                x-bind:aria-pressed="(row.status === 'ASISTIO').toString()"
+                x-bind:class="row.status === 'ASISTIO' ? 'bg-emerald-700 text-white' : 'bg-white text-slate-800 hover:bg-slate-100'"
+                class="min-h-11 px-2.5 text-xs font-extrabold sm:text-sm"
+              >
+                Asistió
+              </button>
+              <button
+                type="button"
+                x-on:click="setStatus(row.staff.id, 'FALTA')"
+                x-bind:aria-pressed="(row.status === 'FALTA').toString()"
+                x-bind:class="row.status === 'FALTA' ? 'bg-red-700 text-white' : 'bg-white text-slate-800 hover:bg-slate-100'"
+                class="min-h-11 border-x border-slate-300 px-2.5 text-xs font-extrabold sm:text-sm"
+              >
+                Falta
+              </button>
+              <button
+                type="button"
+                x-on:click="setStatus(row.staff.id, 'VACACIONES')"
+                x-bind:aria-pressed="(row.status === 'VACACIONES').toString()"
+                x-bind:class="row.status === 'VACACIONES' ? 'bg-blue-700 text-white' : 'bg-white text-slate-800 hover:bg-slate-100'"
+                class="min-h-11 px-2.5 text-xs font-extrabold sm:text-sm"
+              >
+                Vacaciones
+              </button>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Barra inferior: guardar + exportar -->
+  <div class="sticky bottom-0 z-30 -mx-4 border-t-2 border-slate-900 bg-white p-3 shadow-[0_-4px_12px_rgba(0,0,0,0.15)] sm:mx-0 sm:rounded-xl sm:border-2">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <button
+        type="button"
+        x-on:click="save()"
+        x-bind:disabled="saving"
+        class="min-h-12 w-full rounded-lg bg-amber-400 px-6 text-base font-extrabold text-slate-900 hover:bg-amber-300 disabled:opacity-60 sm:w-auto"
+      >
+        <span x-text="saving ? 'Guardando…' : (dirty ? '💾 Guardar lista (cambios pendientes)' : '💾 Guardar lista')"></span>
+      </button>
+      <ExportToolbar pdf="exportPdf()" excel="exportExcel()" whatsapp="openShareWhatsApp()" copy="copyList()" />
+    </div>
+    <p x-show="dirty" x-cloak class="mt-2 text-sm font-bold text-red-700">
+      Tienes cambios sin guardar. El PDF, Excel y WhatsApp usan lo que ves en pantalla.
+    </p>
+  </div>
+
+  <WhatsAppShareModal />
+</section>

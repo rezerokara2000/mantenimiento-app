@@ -1,0 +1,80 @@
+---
+import ExportToolbar from '../lists/ExportToolbar.astro';
+
+/**
+ * Tarjeta de evento. Tanto en /eventos como en /registro (auditoría) se permite editar el evento y su lista.
+ */
+const btn =
+  'inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border-2 px-3 text-sm font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400';
+---
+
+<article class="flex flex-col overflow-hidden rounded-xl bg-white shadow ring-1 ring-slate-300">
+  <header class="flex items-start justify-between gap-3 bg-slate-900 px-4 py-3 text-white">
+    <div class="min-w-0">
+      <h3 class="truncate text-lg font-extrabold" x-text="ev.title"></h3>
+      <p class="truncate text-sm text-slate-300">📍 <span x-text="ev.location"></span></p>
+    </div>
+    <div class="shrink-0 text-right">
+      <p class="text-sm font-extrabold text-amber-300" x-text="fmtRange(ev)"></p>
+      <span
+        x-show="!isAudit && isToday(ev)"
+        x-cloak
+        class="mt-0.5 inline-block rounded-full bg-amber-400 px-2 py-0.5 text-xs font-extrabold text-slate-900"
+      >
+        HOY
+      </span>
+    </div>
+  </header>
+
+  <div class="flex flex-1 flex-col gap-3 p-4">
+    <div class="flex flex-wrap items-center gap-2">
+      <span
+        class="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-bold text-white"
+        x-text="ev.event_types?.name ?? 'Sin tipo'"></span>
+      <span
+        x-show="eventDays(ev).length > 1"
+        x-cloak
+        class="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-900 ring-1 ring-indigo-300"
+      >
+        📅 <span x-text="eventDays(ev).length"></span> días
+      </span>
+      <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900 ring-1 ring-amber-300">
+        ☀️ Día: <span x-text="shiftRows(ev, 'DIA').length"></span>
+      </span>
+      <span class="rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-bold text-slate-900 ring-1 ring-slate-400">
+        🌙 Noche: <span x-text="shiftRows(ev, 'NOCHE').length"></span>
+      </span>
+      <span
+        x-show="isAudit"
+        x-cloak
+        class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-900 ring-1 ring-emerald-300"
+      >
+        ✔ <span x-text="rows(ev).filter(a => a.status === 'ASISTIO').length"></span>/<span x-text="rows(ev).length"></span> asistieron
+      </span>
+    </div>
+
+    <p x-show="rows(ev).length === 0" x-cloak class="text-sm italic text-slate-600">Aún sin personal asignado.</p>
+
+    <div class="mt-auto flex flex-wrap gap-2">
+      <button type="button" x-on:click="view(ev)" class:list={[btn, 'border-slate-900 bg-slate-900 text-white hover:bg-slate-800']}>
+        👁 Ver
+      </button>
+      <a
+        x-bind:href="`/crear-lista?evento=${ev.id}`"
+        class:list={[btn, 'border-amber-500 bg-amber-400 text-slate-900 hover:bg-amber-300']}
+      >
+        📝 Lista
+      </a>
+      <button type="button" x-on:click="startEdit(ev)" class:list={[btn, 'border-slate-400 bg-white text-slate-900 hover:bg-slate-100']}>
+        ✏️ Editar
+      </button>
+      <button type="button" x-on:click="remove(ev)" class:list={[btn, 'border-red-700 bg-white text-red-800 hover:bg-red-50']}>
+        🗑 Eliminar
+      </button>
+    </div>
+
+    <div class="border-t border-slate-200 pt-3">
+      <ExportToolbar compact pdf="exportPdf(ev)" excel="exportExcel(ev)" whatsapp="shareWhatsApp(ev)" copy="copyList(ev)" />
+    </div>
+  </div>
+</article>

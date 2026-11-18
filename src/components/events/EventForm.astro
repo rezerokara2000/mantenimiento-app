@@ -1,0 +1,57 @@
+---
+import Modal from '../ui/Modal.astro';
+
+const field =
+  'h-12 w-full rounded-lg border-2 border-slate-300 bg-white px-3 text-base text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300';
+const label = 'mb-1 block text-sm font-bold text-slate-800';
+---
+
+<Modal show="edit" onClose="edit = null" title="Editar evento" size="sm">
+  <form id="event-edit-form" x-on:submit.prevent="submitEdit()" class="space-y-4" x-show="edit">
+    <template x-if="edit">
+      <div class="space-y-4">
+        <div>
+          <label for="ev-title" class={label}>Título *</label>
+          <input id="ev-title" required x-model="edit.title" class={field} />
+        </div>
+        <div>
+          <label for="ev-loc" class={label}>Lugar *</label>
+          <input id="ev-loc" required x-model="edit.location" class={field} />
+        </div>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label for="ev-date" class={label}>Fecha inicio *</label>
+            <input id="ev-date" type="date" required x-model="edit.event_date" x-on:change="syncEditEndDate()" class={field} />
+          </div>
+          <div>
+            <label for="ev-end-date" class={label}>Fecha fin *</label>
+            <input id="ev-end-date" type="date" required x-model="edit.end_date" x-bind:min="edit.event_date" class={field} />
+          </div>
+        </div>
+        <div>
+          <label for="ev-type" class={label}>Tipo</label>
+          <select id="ev-type" x-model="edit.event_type_id" class={field}>
+            <option value="">Sin tipo</option>
+            <template x-for="t in types" x-bind:key="t.id">
+              <option x-bind:value="t.id" x-text="t.name" x-bind:selected="t.id === edit.event_type_id"></option>
+            </template>
+          </select>
+        </div>
+      </div>
+    </template>
+  </form>
+
+  <Fragment slot="footer">
+    <button type="button" x-on:click="edit = null" class="min-h-12 rounded-lg border-2 border-slate-300 bg-white px-4 font-bold text-slate-800 hover:bg-slate-100">
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      form="event-edit-form"
+      x-bind:disabled="saving"
+      class="min-h-12 rounded-lg bg-amber-400 px-5 font-extrabold text-slate-900 hover:bg-amber-300 disabled:opacity-60"
+      x-text="saving ? 'Guardando…' : 'Guardar cambios'"
+    >
+    </button>
+  </Fragment>
+</Modal>

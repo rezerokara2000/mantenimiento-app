@@ -1,0 +1,41 @@
+---
+import Modal from './Modal.astro';
+---
+
+<Modal onClose="waModal = false" show="waModal" size="sm" title="Compartir por WhatsApp">
+  <form id="wa-share-form" x-on:submit.prevent="sendWhatsApp()" class="space-y-4">
+    <p class="text-sm text-slate-700">
+      Ingresa el número con código de país (ej. <strong>51987654321</strong>) para abrir el chat directo, o déjalo vacío para elegir el contacto dentro de WhatsApp.
+    </p>
+    <div>
+      <label for="wa-phone" class="mb-1 block text-sm font-bold text-slate-800">
+        Número de WhatsApp (opcional)
+      </label>
+      <input
+        id="wa-phone"
+        type="tel"
+        inputmode="numeric"
+        x-model="waPhone"
+        placeholder="Ej.: 51999888777"
+        class="h-12 w-full rounded-lg border-2 border-slate-300 bg-white px-3 text-base text-slate-900 focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+      />
+    </div>
+  </form>
+
+  <Fragment slot="footer">
+    <button
+      type="button"
+      x-on:click="waModal = false"
+      class="min-h-12 rounded-lg border-2 border-slate-300 bg-white px-4 font-bold text-slate-800 hover:bg-slate-100"
+    >
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      form="wa-share-form"
+      class="min-h-12 rounded-lg bg-green-700 px-5 font-extrabold text-white hover:bg-green-800"
+    >
+      📲 Abrir WhatsApp
+    </button>
+  </Fragment>
+</Modal>

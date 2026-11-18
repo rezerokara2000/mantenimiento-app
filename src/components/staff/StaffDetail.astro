@@ -1,0 +1,71 @@
+---
+import Modal from '../ui/Modal.astro';
+import StaffBadge from './StaffBadge.astro';
+---
+
+<Modal show="detail" onClose="detail = null" titleExpr="detail ? fullName(detail) : ''" size="md">
+  <template x-if="detail">
+    <div class="space-y-4">
+      <dl class="grid grid-cols-2 gap-3 rounded-lg bg-slate-100 p-3 sm:grid-cols-4">
+        <div>
+          <dt class="text-xs font-bold uppercase tracking-wide text-slate-600">DNI</dt>
+          <dd class="font-bold text-slate-900" x-text="detail.dni ?? '—'"></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-bold uppercase tracking-wide text-slate-600">Edad</dt>
+          <dd class="font-bold text-slate-900" x-text="detail.age ?? '—'"></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-bold uppercase tracking-wide text-slate-600">Afiliación</dt>
+          <dd><StaffBadge value="detail.affiliation" /><span x-show="!detail.affiliation" class="font-bold">—</span></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-bold uppercase tracking-wide text-slate-600">Estado</dt>
+          <dd class="font-bold text-slate-900" x-text="detail.is_active ? 'Activo' : 'Inactivo'"></dd>
+        </div>
+      </dl>
+
+      <section>
+        <h3 class="mb-2 flex items-center justify-between text-base font-extrabold text-slate-900">
+          <span>Historial de participación</span>
+          <span class="text-sm font-semibold text-slate-700" x-text="`${historyStats.attended} asistencias de ${historyStats.total} registros`"></span>
+        </h3>
+        <p x-show="historyLoading" class="text-sm text-slate-700">Cargando historial…</p>
+        <p x-show="!historyLoading && history.length === 0" x-cloak class="text-sm italic text-slate-600">
+          Aún no participa en ningún evento.
+        </p>
+        <ul class="divide-y divide-slate-200 overflow-hidden rounded-lg ring-1 ring-slate-300">
+          <template x-for="h in history" x-bind:key="h.id">
+            <li class="flex items-center justify-between gap-2 px-3 py-2.5">
+              <div class="min-w-0">
+                <p class="truncate font-bold text-slate-900" x-text="h.events.title"></p>
+                <p class="text-sm text-slate-700">
+                  <span x-text="h.event_day.split('-').reverse().join('/')"></span> ·
+                  <span x-text="h.shift === 'DIA' ? '☀️ Día' : '🌙 Noche'"></span>
+                </p>
+              </div>
+              <span
+                class="shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold ring-1"
+                x-bind:class="{
+                  'bg-emerald-100 text-emerald-900 ring-emerald-400': h.status === 'ASISTIO',
+                  'bg-red-100 text-red-900 ring-red-400': h.status === 'FALTA',
+                  'bg-blue-100 text-blue-900 ring-blue-400': h.status === 'VACACIONES'
+                }"
+                x-text="h.status === 'ASISTIO' ? 'Asistió' : (h.status === 'VACACIONES' ? 'Vacaciones' : 'Falta')"
+              ></span>
+            </li>
+          </template>
+        </ul>
+      </section>
+    </div>
+  </template>
+
+  <Fragment slot="footer">
+    <button type="button" x-on:click="startEdit(detail)" class="min-h-10 rounded-lg border-2 border-slate-400 bg-white px-3 text-sm font-bold text-slate-900 hover:bg-slate-100">
+      ✏️ Editar
+    </button>
+    <button type="button" x-on:click="remove(detail)" class="min-h-10 rounded-lg border-2 border-red-700 bg-white px-3 text-sm font-bold text-red-800 hover:bg-red-50">
+      🗑 Eliminar
+    </button>
+  </Fragment>
+</Modal>

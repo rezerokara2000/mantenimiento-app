@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@layer base {
+  /* Oculta elementos Alpine hasta que se inicializa */
+  [x-cloak] {
+    display: none !important;
+  }
+}

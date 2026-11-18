@@ -1,0 +1,50 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/layout/Navbar.astro';
+import Footer from '../components/layout/Footer.astro';
+import Toast from '../components/ui/Toast.astro';
+import ConfirmDialog from '../components/ui/ConfirmDialog.astro';
+import { supabaseConfigured } from '../lib/supabase';
+
+export interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = 'Gestión de personal, eventos y listas de asistencia de mantenimiento' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>" />
+    <title>{title} · Mantenimiento</title>
+  </head>
+  <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
+    <Navbar />
+
+    {
+      !supabaseConfigured && (
+        <div class="bg-red-700 px-4 py-3 text-center text-sm font-bold text-white" role="alert">
+          Falta configurar Supabase: copia <code>.env.example</code> a <code>.env</code> y completa PUBLIC_SUPABASE_URL y
+          PUBLIC_SUPABASE_ANON_KEY.
+        </div>
+      )
+    }
+
+    <main class="mx-auto w-full max-w-6xl px-4 py-5">
+      <slot />
+    </main>
+
+    <Footer />
+    <Toast />
+    <ConfirmDialog />
+
+    <script>
+      import '../lib/client/boot';
+    </script>
+  </body>
+</html>

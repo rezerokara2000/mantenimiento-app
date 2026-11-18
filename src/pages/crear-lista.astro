@@ -1,0 +1,187 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import AttendanceBuilder from '../components/lists/AttendanceBuilder.astro';
+
+const field =
+  'h-12 w-full rounded-lg border-2 border-slate-300 bg-white px-3 text-base text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300';
+const label = 'mb-1 block text-sm font-bold text-slate-800';
+const steps = [
+  { n: 1, label: 'Tipo de lista' },
+  { n: 2, label: 'Evento' },
+  { n: 3, label: 'Días y asistencia' },
+];
+---
+
+<MainLayout title="Crear lista">
+  <div x-data="listBuilder()" class="space-y-5">
+    <h1 class="text-2xl font-extrabold text-slate-900">Crear / Editar lista de asistencia</h1>
+
+    <!-- Indicador de pasos -->
+    <ol class="grid grid-cols-3 gap-2" aria-label="Pasos">
+      {
+        steps.map((s) => (
+          <li>
+            <button
+              type="button"
+              x-on:click={`goStep(${s.n})`}
+              x-bind:aria-current={`step === ${s.n} ? 'step' : undefined`}
+              x-bind:class={`step === ${s.n} ? 'bg-slate-900 text-white ring-slate-900' : (step > ${s.n} ? 'bg-amber-100 text-slate-900 ring-amber-400' : 'bg-white text-slate-600 ring-slate-300')`}
+              class="flex min-h-14 w-full flex-col items-center justify-center rounded-lg px-1 text-center text-xs font-bold ring-2 sm:flex-row sm:gap-2 sm:text-sm"
+            >
+              <span
+                class="mb-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-xs font-extrabold text-slate-900 sm:mb-0"
+                x-text={`step > ${s.n} ? '✓' : ${s.n}`}
+              />
+              <span>{s.label}</span>
+            </button>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p x-show="loading" class="rounded-xl bg-white p-6 text-center font-semibold text-slate-700 ring-1 ring-slate-300">
+      Cargando…
+    </p>
+
+    <!-- PASO 1 -->
+    <section x-show="!loading && step === 1" x-cloak class="space-y-4 rounded-xl bg-white p-4 shadow ring-1 ring-slate-300">
+      <h2 class="text-lg font-extrabold">1. ¿Qué tipo de lista es?</h2>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <template x-for="t in types" x-bind:key="t.id">
+          <button
+            type="button"
+            x-on:click="typeId = t.id"
+            x-bind:aria-pressed="(typeId === t.id).toString()"
+            x-bind:class="typeId === t.id ? 'border-amber-500 bg-amber-400 text-slate-900' : 'border-slate-300 bg-white text-slate-900 hover:bg-slate-100'"
+            class="min-h-16 rounded-xl border-2 px-3 text-lg font-extrabold focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
+            x-text="t.name"
+          >
+          </button>
+        </template>
+        <button
+          type="button"
+          x-on:click="addingType = !addingType"
+          class="min-h-16 rounded-xl border-2 border-dashed border-slate-500 bg-white px-3 text-base font-bold text-slate-800 hover:bg-slate-100"
+        >
+          + Agregar nuevo tipo
+        </button>
+      </div>
+
+      <form x-show="addingType" x-cloak x-on:submit.prevent="addType()" class="flex gap-2 rounded-lg bg-slate-100 p-3">
+        <label class="sr-only" for="new-type">Nombre del nuevo tipo</label>
+        <input id="new-type" x-model="newType" placeholder="Ej.: Concierto, Matrimonio…" autocomplete="off" class={field} />
+        <button type="submit" x-bind:disabled="!newType.trim()" class="h-12 shrink-0 rounded-lg bg-slate-900 px-4 font-bold text-white hover:bg-slate-800 disabled:opacity-50">
+          Guardar
+        </button>
+      </form>
+
+      <button
+        type="button"
+        x-on:click="goStep(2)"
+        x-bind:disabled="!typeId"
+        class="min-h-12 w-full rounded-lg bg-slate-900 px-6 text-base font-extrabold text-white hover:bg-slate-800 disabled:opacity-50 sm:w-auto"
+      >
+        Continuar →
+      </button>
+    </section>
+
+    <!-- PASO 2 -->
+    <section x-show="!loading && step === 2" x-cloak class="space-y-4 rounded-xl bg-white p-4 shadow ring-1 ring-slate-300">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-lg font-extrabold">2. Datos del evento <span class="text-slate-600" x-text="typeName ? '· ' + typeName : ''"></span></h2>
+        <button type="button" x-on:click="goStep(1)" class="text-sm font-bold text-slate-800 underline underline-offset-2">← Cambiar tipo</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 rounded-xl bg-slate-200 p-1.5" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          x-on:click="eventMode = 'existing'"
+          x-bind:class="eventMode === 'existing' ? 'bg-slate-900 text-white shadow' : 'text-slate-800 hover:bg-slate-100'"
+          class="min-h-12 rounded-lg px-2 font-extrabold"
+        >
+          Evento existente
+        </button>
+        <button
+          type="button"
+          role="tab"
+          x-on:click="eventMode = 'new'"
+          x-bind:class="eventMode === 'new' ? 'bg-slate-900 text-white shadow' : 'text-slate-800 hover:bg-slate-100'"
+          class="min-h-12 rounded-lg px-2 font-extrabold"
+        >
+          + Crear nuevo
+        </button>
+      </div>
+
+      <div x-show="eventMode === 'existing'" class="space-y-3">
+        <label class="relative block">
+          <span class="sr-only">Buscar evento</span>
+          <input x-model.debounce.150ms="eventQ" type="search" placeholder="Buscar por título, lugar o fecha" class={field} />
+        </label>
+        <ul class="max-h-96 divide-y divide-slate-200 overflow-y-auto rounded-lg ring-1 ring-slate-300">
+          <template x-for="ev in eventOptions" x-bind:key="ev.id">
+            <li>
+              <button type="button" x-on:click="openEvent(ev)" class="flex min-h-16 w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-amber-50 focus:outline-none focus-visible:bg-amber-100">
+                <span class="min-w-0">
+                  <span class="block truncate text-base font-extrabold text-slate-900" x-text="ev.title"></span>
+                  <span class="block truncate text-sm text-slate-700">
+                    📍 <span x-text="ev.location"></span> · <span x-text="ev.event_assignments.length + ' registros'"></span>
+                  </span>
+                </span>
+                <span class="shrink-0 text-right">
+                  <span class="block text-sm font-bold text-slate-900" x-text="fmtRange(ev)"></span>
+                  <span x-show="isPast(ev)" x-cloak class="text-xs font-bold text-slate-600">Pasado</span>
+                </span>
+              </button>
+            </li>
+          </template>
+          <li x-show="eventOptions.length === 0" x-cloak class="p-4 text-center text-sm italic text-slate-600">
+            No hay eventos de este tipo. Crea uno nuevo.
+          </li>
+        </ul>
+      </div>
+
+      <form x-show="eventMode === 'new'" x-cloak x-on:submit.prevent="createEvent()" class="space-y-3">
+        <div>
+          <label for="n-title" class={label}>Título *</label>
+          <input id="n-title" required x-model="newEvent.title" class={field} placeholder="Ej.: Fiesta de aniversario" />
+        </div>
+        <div>
+          <label for="n-loc" class={label}>Lugar *</label>
+          <input id="n-loc" required x-model="newEvent.location" class={field} placeholder="Ej.: Discoteca Central" />
+        </div>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label for="n-date" class={label}>Fecha inicio *</label>
+            <input id="n-date" type="date" required x-model="newEvent.event_date" x-on:change="syncNewEndDate()" class={field} />
+          </div>
+          <div>
+            <label for="n-end-date" class={label}>Fecha fin *</label>
+            <input id="n-end-date" type="date" required x-model="newEvent.end_date" x-bind:min="newEvent.event_date" class={field} />
+          </div>
+        </div>
+        <button type="submit" x-bind:disabled="creatingEvent" class="min-h-12 w-full rounded-lg bg-amber-400 px-6 font-extrabold text-slate-900 hover:bg-amber-300 disabled:opacity-60 sm:w-auto">
+          <span x-text="creatingEvent ? 'Creando…' : 'Crear evento y continuar →'"></span>
+        </button>
+      </form>
+    </section>
+
+    <!-- PASO 3 -->
+    <section x-show="!loading && step === 3 && event" x-cloak class="space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-900 p-4 text-white">
+        <div class="min-w-0">
+          <p class="text-xs font-bold uppercase tracking-wide text-amber-300" x-text="typeName"></p>
+          <h2 class="truncate text-xl font-extrabold" x-text="event?.title"></h2>
+          <p class="text-sm text-slate-300">
+            📍 <span x-text="event?.location"></span> · 📅 <span x-text="event ? fmtRange(event) : ''"></span>
+          </p>
+        </div>
+        <button type="button" x-on:click="changeEvent()" class="min-h-11 rounded-lg border-2 border-white px-3 text-sm font-bold hover:bg-slate-800">
+          Cambiar evento
+        </button>
+      </div>
+
+      <AttendanceBuilder />
+    </section>
+  </div>
+</MainLayout>

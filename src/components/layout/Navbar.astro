@@ -1,0 +1,32 @@
+---
+import HamburgerMenu from './HamburgerMenu.astro';
+
+const links = [
+  { href: '/crear-lista', label: 'Crear Lista', icon: '➕', hint: 'Generador de listas de asistencia' },
+  { href: '/crear-lista-personal', label: 'Lista de personal', icon: '📋', hint: 'Crear listas de personal sin evento' },
+  { href: '/personal', label: 'Personal', icon: '👷', hint: 'Base de datos de trabajadores' },
+  { href: '/eventos', label: 'Eventos', icon: '📅', hint: 'Programados y de hoy' },
+  { href: '/registro', label: 'Registro', icon: '🗂️', hint: 'Auditoría de eventos pasados' },
+];
+const current = Astro.url.pathname;
+---
+
+<header class="sticky top-0 z-40 border-b border-slate-700 bg-slate-900 text-white">
+  <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
+    <a href="/" class="flex items-center gap-2 rounded-md text-lg font-extrabold tracking-tight focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
+      <span class="flex h-8 w-8 items-center justify-center rounded-md bg-amber-400 text-base text-slate-900" aria-hidden="true">🔧</span>
+      <span>Mantenimiento</span>
+    </a>
+
+    <!-- Atajos visibles solo en pantallas anchas; el menú hamburguesa siempre está disponible -->
+    <div class="flex items-center gap-2">
+      <a
+        href="/crear-lista"
+        class="hidden rounded-lg bg-amber-400 px-3 py-2 text-sm font-bold text-slate-900 hover:bg-amber-300 sm:block"
+      >
+        + Nueva lista
+      </a>
+      <HamburgerMenu links={links} current={current} />
+    </div>
+  </div>
+</header>

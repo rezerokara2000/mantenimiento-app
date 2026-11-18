@@ -1,0 +1,90 @@
+---
+import StaffBadge from './StaffBadge.astro';
+
+/** Lista de trabajadores: tarjetas en móvil, tabla en pantallas anchas. Scope: staffPage. */
+const act =
+  'inline-flex min-h-10 items-center justify-center rounded-lg border-2 px-3 text-sm font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400';
+---
+
+<div>
+  <p x-show="loading" class="rounded-xl bg-white p-6 text-center font-semibold text-slate-700 ring-1 ring-slate-300">Cargando personal…</p>
+
+  <p
+    x-show="!loading && filtered.length === 0"
+    x-cloak
+    class="rounded-xl bg-white p-6 text-center font-semibold text-slate-700 ring-1 ring-slate-300"
+  >
+    No hay trabajadores que coincidan.
+  </p>
+
+  <!-- Móvil: tarjetas -->
+  <ul class="space-y-3 md:hidden">
+    <template x-for="s in filtered" x-bind:key="s.id">
+      <li class="rounded-xl bg-white p-4 shadow ring-1 ring-slate-300" x-bind:class="{ 'opacity-60': !s.is_active }">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="truncate text-lg font-extrabold text-slate-900" x-text="fullName(s)"></p>
+            <p class="text-sm text-slate-700">
+              <span x-show="s.dni" x-text="'DNI ' + s.dni"></span>
+              <span x-show="s.age" x-text="' · ' + s.age + ' años'"></span>
+            </p>
+          </div>
+          <span x-show="!s.is_active" x-cloak class="rounded-full bg-slate-300 px-2 py-0.5 text-xs font-bold text-slate-900">Inactivo</span>
+        </div>
+        <div class="mt-1"><StaffBadge value="s.affiliation" /></div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button type="button" x-on:click="view(s)" class:list={[act, 'border-slate-900 bg-slate-900 text-white']}>👁 Ver</button>
+          <button type="button" x-on:click="startEdit(s)" class:list={[act, 'border-slate-400 bg-white text-slate-900']}>✏️ Editar</button>
+          <button type="button" x-on:click="remove(s)" class:list={[act, 'border-red-700 bg-white text-red-800']}>🗑 Eliminar</button>
+        </div>
+      </li>
+    </template>
+  </ul>
+
+  <!-- Escritorio: tabla -->
+  <div class="hidden overflow-hidden rounded-xl bg-white shadow ring-1 ring-slate-300 md:block" x-show="filtered.length > 0">
+    <table class="w-full text-left text-base">
+      <thead class="bg-slate-900 text-sm uppercase tracking-wide text-white">
+        <tr>
+          <th scope="col" class="px-4 py-3">Nombre</th>
+          <th scope="col" class="px-4 py-3">DNI</th>
+          <th scope="col" class="px-4 py-3">Edad</th>
+          <th scope="col" class="px-4 py-3">Afiliación</th>
+          <th scope="col" class="px-4 py-3">Estado</th>
+          <th scope="col" class="px-4 py-3 text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200">
+        <template x-for="s in filtered" x-bind:key="s.id">
+          <tr class="hover:bg-amber-50" x-bind:class="{ 'opacity-60': !s.is_active }">
+            <td class="px-4 py-3 font-bold text-slate-900" x-text="fullName(s)"></td>
+            <td class="px-4 py-3 text-slate-800" x-text="s.dni ?? '—'"></td>
+            <td class="px-4 py-3 text-slate-800" x-text="s.age ?? '—'"></td>
+            <td class="px-4 py-3">
+              <StaffBadge value="s.affiliation" />
+              <span x-show="!s.affiliation" class="text-slate-600">—</span>
+            </td>
+            <td class="px-4 py-3">
+              <button
+                type="button"
+                x-on:click="toggleActive(s)"
+                x-bind:title="s.is_active ? 'Marcar como inactivo' : 'Marcar como activo'"
+                class="rounded-full px-2.5 py-0.5 text-xs font-extrabold ring-1"
+                x-bind:class="s.is_active ? 'bg-emerald-100 text-emerald-900 ring-emerald-400' : 'bg-slate-200 text-slate-800 ring-slate-400'"
+                x-text="s.is_active ? 'Activo' : 'Inactivo'"
+              >
+              </button>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex justify-end gap-2">
+                <button type="button" x-on:click="view(s)" class:list={[act, 'border-slate-900 bg-slate-900 text-white hover:bg-slate-800']}>Ver</button>
+                <button type="button" x-on:click="startEdit(s)" class:list={[act, 'border-slate-400 bg-white text-slate-900 hover:bg-slate-100']}>Editar</button>
+                <button type="button" x-on:click="remove(s)" class:list={[act, 'border-red-700 bg-white text-red-800 hover:bg-red-50']}>Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+</div>

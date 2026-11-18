@@ -1,0 +1,62 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import SearchInput from '../components/ui/SearchInput.astro';
+import ExportToolbar from '../components/lists/ExportToolbar.astro';
+import StaffTable from '../components/staff/StaffTable.astro';
+import StaffForm from '../components/staff/StaffForm.astro';
+import StaffDetail from '../components/staff/StaffDetail.astro';
+import WhatsAppShareModal from '../components/ui/WhatsAppShareModal.astro';
+
+const field =
+  'h-12 w-full rounded-lg border-2 border-slate-300 bg-white px-3 text-base text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300';
+---
+
+<MainLayout title="Personal">
+  <div x-data="staffPage()" class="space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-2xl font-extrabold text-slate-900">Personal de mantenimiento</h1>
+      <button
+        type="button"
+        x-on:click="startCreate()"
+        class="min-h-12 rounded-lg bg-amber-400 px-5 font-extrabold text-slate-900 shadow hover:bg-amber-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
+      >
+        + Nuevo trabajador
+      </button>
+    </div>
+
+    <section class="space-y-3 rounded-xl bg-white p-3 shadow ring-1 ring-slate-300" aria-label="Búsqueda y filtros">
+      <SearchInput model="q" placeholder="Nombre, apellido, DNI o afiliación" />
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="p-aff" class="mb-1 block text-sm font-bold text-slate-800">Afiliación</label>
+          <select id="p-aff" x-model="affiliation" class={field}>
+            <option value="">Todas</option>
+            <template x-for="a in affiliations" x-bind:key="a"><option x-bind:value="a" x-text="a"></option></template>
+          </select>
+        </div>
+        <div>
+          <label for="p-status" class="mb-1 block text-sm font-bold text-slate-800">Estado</label>
+          <select id="p-status" x-model="status" class={field}>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+            <option value="all">Todos</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <p class="text-sm font-semibold text-slate-700" aria-live="polite">
+          <span x-text="filtered.length"></span> trabajador(es)
+          <template x-if="activeFilters > 0">
+            <button type="button" x-on:click="resetFilters()" class="ml-2 font-bold text-red-700 underline underline-offset-2">Limpiar filtros</button>
+          </template>
+        </p>
+        <ExportToolbar compact pdf="exportPdf()" excel="exportExcel()" whatsapp="openShareWhatsApp()" copy="copyList()" />
+      </div>
+    </section>
+
+    <StaffTable />
+    <StaffForm />
+    <StaffDetail />
+    <WhatsAppShareModal />
+  </div>
+</MainLayout>

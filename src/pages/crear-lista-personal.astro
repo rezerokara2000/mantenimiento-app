@@ -1,0 +1,132 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import SearchInput from '../components/ui/SearchInput.astro';
+
+---
+
+<MainLayout title="Crear lista de personal">
+  <div x-data="staffListBuilder()" class="space-y-5">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900">Crear lista de personal</h1>
+      <p class="mt-1 text-sm text-slate-700">
+        Selecciona trabajadores y los datos que quieres incluir. Esta lista no está asociada a un evento ni registra asistencia.
+      </p>
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
+      <section class="space-y-3 rounded-xl bg-white p-4 shadow ring-1 ring-slate-300" aria-label="Seleccionar personal">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-lg font-extrabold text-slate-900">Personal</h2>
+          <span class="rounded-full bg-slate-900 px-3 py-1 text-sm font-bold text-white" x-text="`${selectedCount} seleccionados`"></span>
+        </div>
+
+        <SearchInput model="query" placeholder="Buscar por nombre, DNI o afiliación" label="Buscar personal" />
+
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            x-on:click="selectVisible(true)"
+            x-bind:disabled="filtered.length === 0"
+            class="min-h-10 rounded-lg border-2 border-amber-500 bg-amber-50 px-3 text-sm font-bold text-slate-900 hover:bg-amber-100 disabled:opacity-50"
+          >
+            Seleccionar visibles
+          </button>
+          <button
+            type="button"
+            x-on:click="selectVisible(false)"
+            x-bind:disabled="filtered.length === 0"
+            class="min-h-10 rounded-lg border-2 border-slate-300 bg-white px-3 text-sm font-bold text-slate-800 hover:bg-slate-100 disabled:opacity-50"
+          >
+            Quitar visibles
+          </button>
+        </div>
+
+        <p x-show="loading" class="rounded-lg bg-slate-100 p-4 text-center text-sm font-semibold text-slate-700">Cargando personal…</p>
+        <ul x-show="!loading" class="max-h-[28rem] divide-y divide-slate-200 overflow-y-auto rounded-lg ring-1 ring-slate-300">
+          <template x-for="person in filtered" x-bind:key="person.id">
+            <li>
+              <label class="flex min-h-14 cursor-pointer items-center gap-3 px-3 py-2 hover:bg-amber-50">
+                <input
+                  type="checkbox"
+                  class="h-6 w-6 accent-amber-500"
+                  x-bind:checked="Boolean(selected[person.id])"
+                  x-on:change="toggle(person.id)"
+                />
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate font-bold text-slate-900" x-text="fullName(person)"></span>
+                  <span class="block truncate text-sm text-slate-600">
+                    <span x-show="person.dni" x-text="'DNI ' + person.dni"></span>
+                    <span x-show="person.affiliation" x-text="(person.dni ? ' · ' : '') + person.affiliation"></span>
+                  </span>
+                </span>
+                <span
+                  x-show="!person.is_active"
+                  class="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-800"
+                >
+                  Inactivo
+                </span>
+              </label>
+            </li>
+          </template>
+          <li x-show="!loading && filtered.length === 0" class="p-5 text-center text-sm italic text-slate-600">
+            No hay personal que coincida con la búsqueda.
+          </li>
+        </ul>
+      </section>
+
+      <section class="space-y-3 rounded-xl bg-white p-4 shadow ring-1 ring-slate-300" aria-label="Columnas de la lista">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">Datos a incluir</h2>
+          <p class="text-sm text-slate-600">El nombre siempre se incluye.</p>
+        </div>
+        <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg bg-slate-50 px-3 ring-1 ring-slate-200">
+          <input type="checkbox" checked disabled class="h-5 w-5 accent-amber-500" />
+          <span class="font-bold text-slate-900">Nombre y apellidos</span>
+          <span class="ml-auto text-xs font-semibold text-slate-600">Siempre</span>
+        </label>
+        <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg bg-slate-50 px-3 ring-1 ring-slate-200">
+          <input type="checkbox" x-model="fields.dni" class="h-5 w-5 accent-amber-500" />
+          <span class="font-bold text-slate-900">DNI</span>
+        </label>
+        <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg bg-slate-50 px-3 ring-1 ring-slate-200">
+          <input type="checkbox" x-model="fields.age" class="h-5 w-5 accent-amber-500" />
+          <span class="font-bold text-slate-900">Edad</span>
+        </label>
+        <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg bg-slate-50 px-3 ring-1 ring-slate-200">
+          <input type="checkbox" x-model="fields.affiliation" class="h-5 w-5 accent-amber-500" />
+          <span class="font-bold text-slate-900">Afiliación</span>
+        </label>
+        <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg bg-slate-50 px-3 ring-1 ring-slate-200">
+          <input type="checkbox" x-model="fields.is_active" class="h-5 w-5 accent-amber-500" />
+          <span class="font-bold text-slate-900">Estado activo/inactivo</span>
+        </label>
+      </section>
+    </div>
+
+    <section class="sticky bottom-0 z-30 rounded-xl border-2 border-slate-900 bg-white p-3 shadow-[0_-4px_12px_rgba(0,0,0,0.12)]">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="text-sm font-bold text-slate-700">
+          Lista sin evento ni datos de asistencia · <span x-text="selectedCount"></span> trabajador(es)
+        </p>
+        <div class="flex w-full flex-wrap gap-2 sm:w-auto">
+          <button
+            type="button"
+            x-on:click="exportPdf()"
+            x-bind:disabled="selectedCount === 0"
+            class="min-h-12 flex-1 rounded-lg bg-red-700 px-5 font-extrabold text-white hover:bg-red-800 disabled:opacity-50 sm:flex-none"
+          >
+            Exportar PDF
+          </button>
+          <button
+            type="button"
+            x-on:click="exportExcel()"
+            x-bind:disabled="selectedCount === 0"
+            class="min-h-12 flex-1 rounded-lg bg-emerald-700 px-5 font-extrabold text-white hover:bg-emerald-800 disabled:opacity-50 sm:flex-none"
+          >
+            Exportar Excel
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</MainLayout>

@@ -1,0 +1,117 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import EventFilters from '../components/events/EventFilters.astro';
+import EventCard from '../components/events/EventCard.astro';
+import EventDetail from '../components/events/EventDetail.astro';
+import EventForm from '../components/events/EventForm.astro';
+import WhatsAppShareModal from '../components/ui/WhatsAppShareModal.astro';
+---
+
+<MainLayout title="Registro">
+  <div x-data="eventsBoard({ mode: 'past' })" class="space-y-4">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900">Registro / Auditoría</h1>
+      <p class="text-sm text-slate-700">Eventos finalizados. Puedes consultar métricas, editar datos o listas y exportar.</p>
+    </div>
+
+    <EventFilters exportAll />
+
+    <!-- Métricas rápidas -->
+    <section aria-label="Métricas" class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div class="rounded-xl bg-slate-900 p-4 text-white shadow">
+        <p class="text-xs font-bold uppercase tracking-wide text-amber-300">Eventos</p>
+        <p class="text-3xl font-extrabold" x-text="metrics.events"></p>
+      </div>
+      <div class="rounded-xl bg-white p-4 shadow ring-1 ring-slate-300">
+        <p class="text-xs font-bold uppercase tracking-wide text-slate-600">Asistieron / Total</p>
+        <p class="text-3xl font-extrabold text-slate-900">
+          <span x-text="metrics.asist"></span><span class="text-xl text-slate-600"> / <span x-text="metrics.conv"></span></span>
+        </p>
+        <p class="text-xs font-bold text-slate-700">
+          <span class="text-emerald-800" x-text="metrics.pct + '% asist.'"></span> ·
+          <span class="text-red-700" x-text="metrics.falta + ' faltas'"></span> ·
+          <span class="text-blue-700" x-text="metrics.vac + ' vac.'"></span>
+        </p>
+      </div>
+      <div class="rounded-xl bg-amber-100 p-4 shadow ring-1 ring-amber-300">
+        <p class="text-xs font-bold uppercase tracking-wide text-amber-900">☀️ Turno Día</p>
+        <p class="text-3xl font-extrabold text-slate-900">
+          <span x-text="metrics.dia.asist"></span><span class="text-xl text-slate-600"> / <span x-text="metrics.dia.conv"></span></span>
+        </p>
+        <p class="text-sm font-bold text-slate-800"><span x-text="metrics.dia.pct"></span>%</p>
+      </div>
+      <div class="rounded-xl bg-slate-200 p-4 shadow ring-1 ring-slate-400">
+        <p class="text-xs font-bold uppercase tracking-wide text-slate-800">🌙 Turno Noche</p>
+        <p class="text-3xl font-extrabold text-slate-900">
+          <span x-text="metrics.noche.asist"></span><span class="text-xl text-slate-600"> / <span x-text="metrics.noche.conv"></span></span>
+        </p>
+        <p class="text-sm font-bold text-slate-800"><span x-text="metrics.noche.pct"></span>%</p>
+      </div>
+    </section>
+
+    <!-- Historial de participación por trabajador -->
+    <section class="overflow-hidden rounded-xl bg-white shadow ring-1 ring-slate-300" aria-label="Participación por trabajador">
+      <h2 class="bg-slate-900 px-4 py-3 text-base font-extrabold text-white">Participación por trabajador</h2>
+      <p x-show="people.length === 0" x-cloak class="p-4 text-sm italic text-slate-600">Sin datos con los filtros actuales.</p>
+      <ul class="divide-y divide-slate-200">
+        <template x-for="p in people" x-bind:key="p.staff_id">
+          <li>
+            <button
+              type="button"
+              x-on:click="togglePerson(p.staff_id)"
+              x-bind:aria-expanded="(openPerson === p.staff_id).toString()"
+              class="flex min-h-14 w-full items-center justify-between gap-3 px-4 py-2 text-left hover:bg-amber-50 focus:outline-none focus-visible:bg-amber-100"
+            >
+              <span class="min-w-0">
+                <span class="block truncate font-bold text-slate-900" x-text="p.name"></span>
+                <span class="block truncate text-sm text-slate-700" x-text="[p.dni && 'DNI ' + p.dni, p.affiliation].filter(Boolean).join(' · ')"></span>
+              </span>
+              <span class="shrink-0 text-right text-sm">
+                <span class="block font-extrabold text-slate-900">
+                  <span class="text-emerald-800" x-text="p.asistio + ' asist.'"></span> ·
+                  <span class="text-red-700" x-text="p.falta + ' faltas'"></span> ·
+                  <span class="text-blue-700" x-text="p.vacaciones + ' vac.'"></span>
+                </span>
+                <span class="block text-slate-700">☀️ <span x-text="p.dia"></span> · 🌙 <span x-text="p.noche"></span></span>
+              </span>
+            </button>
+            <ul x-show="openPerson === p.staff_id" x-cloak class="space-y-1 bg-slate-50 px-4 py-2">
+              <template x-for="(h, i) in p.history" x-bind:key="i">
+                <li class="flex items-center justify-between gap-2 text-sm">
+                  <span class="min-w-0 truncate text-slate-900">
+                    <span class="font-bold" x-text="fmt(h.date)"></span> · <span x-text="h.title"></span> ·
+                    <span x-text="h.shift === 'DIA' ? 'Día' : 'Noche'"></span>
+                  </span>
+                  <span
+                    class="shrink-0 rounded-full px-2 py-0.5 text-xs font-extrabold ring-1"
+                    x-bind:class="{
+                      'bg-emerald-100 text-emerald-900 ring-emerald-400': h.status === 'ASISTIO',
+                      'bg-red-100 text-red-900 ring-red-400': h.status === 'FALTA',
+                      'bg-blue-100 text-blue-900 ring-blue-400': h.status === 'VACACIONES'
+                    }"
+                    x-text="statusText(h.status)"
+                  ></span>
+                </li>
+              </template>
+            </ul>
+          </li>
+        </template>
+      </ul>
+    </section>
+
+    <p x-show="loading" class="rounded-xl bg-white p-6 text-center font-semibold text-slate-700 ring-1 ring-slate-300">Cargando registro…</p>
+    <p x-show="!loading && filtered.length === 0" x-cloak class="rounded-xl bg-white p-6 text-center font-semibold text-slate-700 ring-1 ring-slate-300">
+      No hay eventos pasados que coincidan.
+    </p>
+
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <template x-for="ev in filtered" x-bind:key="ev.id">
+        <EventCard />
+      </template>
+    </div>
+
+    <EventDetail />
+    <EventForm />
+    <WhatsAppShareModal />
+  </div>
+</MainLayout>

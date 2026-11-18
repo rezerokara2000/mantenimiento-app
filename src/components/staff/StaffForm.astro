@@ -1,0 +1,60 @@
+---
+import Modal from '../ui/Modal.astro';
+
+/** Alta/edición de trabajador. Solo el nombre es obligatorio. Scope: staffPage (form, saving, submit()). */
+const field =
+  'h-12 w-full rounded-lg border-2 border-slate-300 bg-white px-3 text-base text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300';
+const label = 'mb-1 block text-sm font-bold text-slate-800';
+---
+
+<Modal show="form" onClose="form = null" titleExpr="form && form.id ? 'Editar trabajador' : 'Nuevo trabajador'" size="sm">
+  <form id="staff-form" x-on:submit.prevent="submit()" x-show="form">
+    <template x-if="form">
+      <div class="space-y-4">
+        <div>
+          <label for="sf-first" class={label}>Nombre * <span class="font-normal text-slate-600">(único campo obligatorio)</span></label>
+          <input id="sf-first" required x-model="form.first_name" autocomplete="off" class={field} />
+        </div>
+        <div>
+          <label for="sf-last" class={label}>Apellidos</label>
+          <input id="sf-last" x-model="form.last_name" autocomplete="off" class={field} />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="sf-dni" class={label}>DNI</label>
+            <input id="sf-dni" x-model="form.dni" inputmode="numeric" maxlength="12" autocomplete="off" class={field} />
+          </div>
+          <div>
+            <label for="sf-age" class={label}>Edad</label>
+            <input id="sf-age" type="number" min="14" max="100" inputmode="numeric" x-model="form.age" class={field} />
+          </div>
+        </div>
+        <div>
+          <label for="sf-aff" class={label}>Afiliación</label>
+          <input id="sf-aff" list="sf-aff-list" x-model="form.affiliation" placeholder="Planilla, Recibo por honorarios, Externo…" class={field} />
+          <datalist id="sf-aff-list">
+            <template x-for="a in affiliations" x-bind:key="a"><option x-bind:value="a"></option></template>
+          </datalist>
+        </div>
+        <label class="flex min-h-12 items-center gap-3 rounded-lg bg-slate-100 px-3 font-bold text-slate-900">
+          <input type="checkbox" x-model="form.is_active" class="h-6 w-6 accent-amber-500" />
+          Trabajador activo
+        </label>
+      </div>
+    </template>
+  </form>
+
+  <Fragment slot="footer">
+    <button type="button" x-on:click="form = null" class="min-h-12 rounded-lg border-2 border-slate-300 bg-white px-4 font-bold text-slate-800 hover:bg-slate-100">
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      form="staff-form"
+      x-bind:disabled="saving"
+      class="min-h-12 rounded-lg bg-amber-400 px-5 font-extrabold text-slate-900 hover:bg-amber-300 disabled:opacity-60"
+      x-text="saving ? 'Guardando…' : 'Guardar'"
+    >
+    </button>
+  </Fragment>
+</Modal>

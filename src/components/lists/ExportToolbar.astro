@@ -1,0 +1,38 @@
+---
+/**
+ * Barra de exportación consistente: PDF, Excel, WhatsApp directo y Copiar.
+ */
+export interface Props {
+  pdf: string;
+  excel: string;
+  copy: string;
+  whatsapp?: string;
+  compact?: boolean;
+}
+const { pdf, excel, copy, whatsapp, compact = false } = Astro.props;
+const btn = compact
+  ? 'min-h-10 px-3 text-sm'
+  : 'min-h-12 px-4 text-base';
+const base =
+  'inline-flex items-center justify-center gap-1.5 rounded-lg border-2 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ' +
+  btn;
+---
+
+<div class="flex flex-wrap gap-2" role="group" aria-label="Exportar">
+  <button type="button" x-on:click={pdf} class:list={[base, 'border-slate-900 bg-white text-slate-900 hover:bg-slate-100']}>
+    📄 PDF
+  </button>
+  <button type="button" x-on:click={excel} class:list={[base, 'border-emerald-800 bg-white text-emerald-900 hover:bg-emerald-50']}>
+    📊 Excel
+  </button>
+  {
+    whatsapp && (
+      <button type="button" x-on:click={whatsapp} class:list={[base, 'border-green-700 bg-green-700 text-white hover:bg-green-800']}>
+        📲 WhatsApp
+      </button>
+    )
+  }
+  <button type="button" x-on:click={copy} class:list={[base, 'border-slate-400 bg-white text-slate-900 hover:bg-slate-100']}>
+    📋 Copiar
+  </button>
+</div>

@@ -1,0 +1,68 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+
+const sections = [
+  { href: '/crear-lista', icon: '➕', title: 'Crear Lista', text: 'Arma la lista de un evento por días y turnos.', primary: true },
+  { href: '/eventos', icon: '📅', title: 'Eventos', text: 'Vigentes, de hoy y próximos.', primary: false },
+  { href: '/personal', icon: '👷', title: 'Personal', text: 'Base de datos de trabajadores.', primary: false },
+  { href: '/registro', icon: '🗂️', title: 'Registro', text: 'Auditoría y edición de eventos pasados.', primary: false },
+];
+---
+
+<MainLayout title="Inicio">
+  <div x-data="eventsBoard({ mode: 'upcoming' })" class="space-y-6">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-900">Panel de mantenimiento</h1>
+      <p class="text-slate-700">¿Qué necesitas hacer hoy?</p>
+    </div>
+
+    <nav class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Accesos rápidos">
+      {
+        sections.map((s) => (
+          <a
+            href={s.href}
+            class:list={[
+              'flex min-h-32 flex-col justify-between rounded-xl p-4 shadow ring-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400',
+              s.primary
+                ? 'bg-amber-400 text-slate-900 ring-amber-500 hover:bg-amber-300'
+                : 'bg-white text-slate-900 ring-slate-300 hover:bg-slate-50',
+            ]}
+          >
+            <span class="text-3xl" aria-hidden="true">{s.icon}</span>
+            <span>
+              <span class="block text-lg font-extrabold">{s.title}</span>
+              <span class="block text-sm">{s.text}</span>
+            </span>
+          </a>
+        ))
+      }
+    </nav>
+
+    <section class="overflow-hidden rounded-xl bg-white shadow ring-1 ring-slate-300" aria-label="Próximos eventos">
+      <div class="flex items-center justify-between bg-slate-900 px-4 py-3 text-white">
+        <h2 class="text-base font-extrabold">Eventos vigentes y próximos</h2>
+        <a href="/eventos" class="text-sm font-bold text-amber-300 underline underline-offset-2">Ver todos</a>
+      </div>
+      <p x-show="loading" class="p-4 text-sm text-slate-700">Cargando…</p>
+      <p x-show="!loading && events.length === 0" x-cloak class="p-4 text-sm italic text-slate-600">
+        No hay eventos programados. Crea una lista para empezar.
+      </p>
+      <ul class="divide-y divide-slate-200">
+        <template x-for="ev in events.slice(0, 5)" x-bind:key="ev.id">
+          <li>
+            <a x-bind:href="`/crear-lista?evento=${ev.id}`" class="flex min-h-16 items-center justify-between gap-3 px-4 py-2 hover:bg-amber-50">
+              <span class="min-w-0">
+                <span class="block truncate font-extrabold text-slate-900" x-text="ev.title"></span>
+                <span class="block truncate text-sm text-slate-700">📍 <span x-text="ev.location"></span></span>
+              </span>
+              <span class="shrink-0 text-right">
+                <span class="block text-sm font-bold text-slate-900" x-text="fmtRange(ev)"></span>
+                <span x-show="isToday(ev)" x-cloak class="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-extrabold text-slate-900">HOY</span>
+              </span>
+            </a>
+          </li>
+        </template>
+      </ul>
+    </section>
+  </div>
+</MainLayout>
