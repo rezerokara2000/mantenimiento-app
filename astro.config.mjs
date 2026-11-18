@@ -1,11 +1,11 @@
 import { defineConfig } from 'astro/config';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
 
-// Renderizado dinámico (SSR). Cambia el adapter si despliegas en Vercel/Netlify/Cloudflare.
+// Renderizado dinámico (SSR) para Vercel.
 export default defineConfig({
   output: 'server',
-  adapter: node({ mode: 'standalone' }),
+  adapter: vercel(),
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
